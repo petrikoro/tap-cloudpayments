@@ -1,0 +1,32 @@
+version: 1
+send_anonymous_usage_stats: true
+project_id: "tap-cloudpayments"
+default_environment: test
+environments:
+- name: test
+plugins:
+  extractors:
+  - name: "tap-cloudpayments"
+    namespace: "tap_cloudpayments"
+    pip_url: -e .
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: '2023-11-01T00:00:00+00:00'
+      #public_id: 'pk_a20ab88aa7731c5203cdc0e716ee8'
+      #api_secret: '9a1d7c2ea065128f7695c5a356f1e2e4'
+    settings:
+    - name: public_id
+      kind: password
+    - name: api_secret
+      kind: password
+    - name: start_date
+      value: '2023-11-01T00:00:00+00:00'
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl

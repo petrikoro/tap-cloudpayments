@@ -12,9 +12,9 @@ from singer_sdk import metrics
 from singer_sdk.streams import RESTStream
 from singer_sdk.authenticators import BasicAuthenticator
 from singer_sdk.helpers.jsonpath import extract_jsonpath
-from tap_cloudpayments.pagination import EmptyPageNumberPaginator
 
-from utils import date_range
+from tap_cloudpayments.helpers import get_date_range
+from tap_cloudpayments.pagination import EmptyPageNumberPaginator
 
 
 _Auth = Callable[[requests.PreparedRequest], requests.PreparedRequest]
@@ -172,7 +172,7 @@ class CloudPaymentsStream(RESTStream):
             An item for every record in the response.
         """
 
-        period = self.date_range(context)
+        period = get_date_range(self.get_starting_timestamp(context), self.config.get('start_date'))
 
         with metrics.http_request_counter(self.name, self.path) as request_counter:
             request_counter.context = context

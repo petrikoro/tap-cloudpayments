@@ -1,13 +1,13 @@
 version: 1
 send_anonymous_usage_stats: true
-project_id: "tap-cloudpayments"
+project_id: tap-cloudpayments
 default_environment: test
 environments:
 - name: test
 plugins:
   extractors:
-  - name: "tap-cloudpayments"
-    namespace: "tap_cloudpayments"
+  - name: tap-cloudpayments
+    namespace: tap_cloudpayments
     pip_url: -e .
     capabilities:
     - state
@@ -21,7 +21,10 @@ plugins:
     - name: api_secret
       kind: password
     - name: start_date
-      value: '2023-11-01T00:00:00+00:00'
+    config:
+      start_date: '2023-11-01T00:00:00+00:00'
+    select:
+    - payments.*
   loaders:
   - name: target-jsonl
     variant: andyh1203

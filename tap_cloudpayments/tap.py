@@ -50,7 +50,7 @@ class TapCloudPayments(Tap):
             A list of discovered streams.
         """
         return [
-            streams.Payments(self),
+            streams.PaymentsStream(self),
         ]
 
 

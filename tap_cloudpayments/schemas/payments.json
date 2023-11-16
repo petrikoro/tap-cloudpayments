@@ -1,0 +1,473 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "PublicId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Идентификатор сайта, который находится в ЛК"
+      },
+      "TerminalUrl": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "URL терминала, через который была инициалищирована транзакция"
+      },
+      "TransactionId": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": "Номер транзакции"
+      },
+      "Amount": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Сумма подтверждения в валюте транзакции, разделитель точка. Количество не нулевых знаков после точки – 2"
+      },
+      "Currency": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Валюта в формате RUB"
+      },
+      "CurrencyCode": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": ""
+      },
+      "PaymentAmount": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Сумма списания"
+      },
+      "PaymentCurrency": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Валюта списания"
+      },
+      "PaymentCurrencyCode": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": ""
+      },
+      "InvoiceId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Номер заказа"
+      },
+      "AccountId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Идентификатор пользователя"
+      },
+      "Email": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Email пользователя"
+      },
+      "Description": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Описание оплаты в свободной форме"
+      },
+      "JsonData": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Любые другие данные, которые будут связаны с транзакцией"
+      },
+      "CreatedDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "PayoutDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "PayoutDateIso": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": ""
+      },
+      "PayoutAmount": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": ""
+      },
+      "CreatedDateIso": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": ""
+      },
+      "AuthDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "AuthDateIso": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": ""
+      },
+      "ConfirmDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "ConfirmDateIso": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": ""
+      },
+      "AuthCode": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Код авторизации"
+      },
+      "TestMode": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Признак тестового режима"
+      },
+      "Rrn": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "OriginalTransactionId": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": ""
+      },
+      "FallBackScenarioDeclinedTransactionId": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": "Номер первой неуспешной транзакции"
+      },
+      "IpAddress": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "ipv4",
+        "description": "IP-адрес плательщика"
+      },
+      "IpCountry": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Двухбуквенный код страны нахождения плательщика по ISO3166-1"
+      },
+      "IpCity": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Город нахождения плательщика"
+      },
+      "IpRegion": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Регион нахождения плательщика"
+      },
+      "IpDistrict": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Округ нахождения плательщика"
+      },
+      "IpLatitude": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Широта нахождения плательщика"
+      },
+      "IpLongitude": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Долгота нахождения плательщика"
+      },
+      "CardFirstSix": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Первые 6 цифр номера карты"
+      },
+      "CardLastFour": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Последние 4 цифры номера карты"
+      },
+      "CardExpDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Срок действия карты в формате MM/YY"
+      },
+      "CardType": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Платежная система карты: Visa, Mastercard, Maestro или МИР"
+      },
+      "CardProduct": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Тип карточного продукта"
+      },
+      "CardCategory": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "IssuerBankCountry": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Двухбуквенный код страны эмитента карты по ISO3166-1"
+      },
+      "Issuer": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Название банка-эмитента карты"
+      },
+      "CardTypeCode": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": ""
+      },
+      "Status": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Статус операции. Может иметь значения [ 'Authorized', 'Completed', 'Cancelled', 'Declined' ]"
+      },
+      "StatusCode": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": ""
+      },
+      "CultureName": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Язык уведомлений. Возможные значения: 'ru-RU', 'en-US'. (см. справочник)"
+      },
+      "Reason": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Причина отказа"
+      },
+      "CardHolderMessage": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Сообщение для плательщика"
+      },
+      "Type": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": ""
+      },
+      "Refunded": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Признак возмещенного платежа"
+      },
+      "Name": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "CARDHOLDER NAME"
+      },
+      "Token": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "SubscriptionId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Идентификатор подписки (для рекуррентных платежей)"
+      },
+      "IsLocalOrder": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": ""
+      },
+      "HideInvoiceId": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": ""
+      },
+      "Gateway": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": ""
+      },
+      "GatewayName": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Идентификатор банка-эквайера"
+      },
+      "ApplePay": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Признак оплаты с помощью ApplePay"
+      },
+      "AndroidPay": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Признак оплаты с помощью AndroidPay"
+      },
+      "MasterPass": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Признак оплаты с помощью MasterPass"
+      },
+      "TotalFee": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Значение общей комиссии"
+      },
+      "EscrowAccumulationId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "ReasonCode": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": "Код ошибки (см. справочник)"
+      },
+      "WalletType": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      },
+      "InfoShopData": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": ""
+      }
+    }
+  }

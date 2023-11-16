@@ -14,31 +14,14 @@ from singer_sdk.authenticators import BasicAuthenticator
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from tap_cloudpayments.pagination import EmptyPageNumberPaginator
 
+from utils import date_range
+
 
 _Auth = Callable[[requests.PreparedRequest], requests.PreparedRequest]
 
 
 class CloudPaymentsStream(RESTStream):
     """CloudPayments stream class."""
-
-    def date_range(self, context: dict | None) -> Iterable[tuple]:
-        """
-        Get a list of dates between a start_date and the current datetime.
-
-        RETURNS:
-           Tuple of datetimes.
-        """
-
-        period = list()
-        
-        if str(self.get_starting_timestamp(context)) == str(self.config.get('start_date')):
-
-            for dt in pendulum.period(self.get_starting_timestamp(context), pendulum.now('UTC')):
-                period.append(dt)
-        else:
-            period.append(self.get_starting_timestamp(context))
-        
-        return period
 
     def backoff_wait_generator(self) -> Generator[float, None, None]:
         """

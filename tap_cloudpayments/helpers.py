@@ -1,5 +1,5 @@
 import pendulum
-from typing import Iterable, tim
+from typing import Iterable
 
 
 def get_date_range(start: pendulum.DateTime, end: pendulum.DateTime) -> Iterable[list]:
@@ -13,10 +13,8 @@ def get_date_range(start: pendulum.DateTime, end: pendulum.DateTime) -> Iterable
         period = list()
         
         if str(start) == str(end):
-
             for dt in pendulum.period(start, pendulum.now('UTC')):
                 period.append(dt)
-        else:
-            period.append(start)
+            return period
         
-        return period
+        return period.append(start)

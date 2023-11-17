@@ -2,19 +2,24 @@ import pendulum
 from typing import Iterable
 
 
-def get_date_range(start: pendulum.DateTime, end: pendulum.DateTime) -> Iterable[list]:
+def get_date_range(starting_replication_ts: pendulum.DateTime, 
+                   replication_key_ts: pendulum.DateTime,
+                   time_zone: str) -> Iterable[list]:
         """
-        Get a list of dates between a start_date and the current datetime.
+        Get a list of dates between a start_timestamp/replication_timestamp and the current datetime.
 
         RETURNS:
-           Tuple of datetimes.
-        """
 
-        period = list()
+           List of datetimes
+        """
+        date_range = []
         
-        if str(start) == str(end):
-            for dt in pendulum.period(start, pendulum.now('UTC')):
-                period.append(dt)
-            return period
+        if starting_replication_ts == replication_key_ts:
+            for dt in pendulum.period(starting_replication_ts, pendulum.now(time_zone)):
+                date_range.append(dt.to_w3c_string())
         
-        return period.append(start)
+        else:
+             for dt in pendulum.period(replication_key_ts, pendulum.now(time_zone)):
+                date_range.append(dt.to_w3c_string())
+
+        return date_range

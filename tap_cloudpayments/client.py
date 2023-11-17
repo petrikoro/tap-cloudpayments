@@ -10,6 +10,7 @@ import requests
 from memoization import cached
 from singer_sdk import metrics
 from singer_sdk.streams import RESTStream
+from singer_sdk.exceptions import FatalAPIError
 from singer_sdk.authenticators import BasicAuthenticator
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 
@@ -141,23 +142,11 @@ class CloudPaymentsStream(RESTStream):
         payload: dict = {}
         
         payload["PageNumber"] = next_page_token['pagination_token']
-        payload["CreatedDateGte"] = str(next_page_token['date_token'])
-        payload["CreatedDateLte"] = str(next_page_token['date_token'] + pendulum.duration(hours=24))
-        payload["TimeZone"] = "UTC"
+        payload["CreatedDateGte"] = pendulum.parse(next_page_token['date_token'], tz=self.config.get('time_zone')).to_w3c_string()
+        payload["CreatedDateLte"] = (pendulum.parse(next_page_token['date_token'], tz=self.config.get('time_zone')) + pendulum.duration(hours=24)).to_w3c_string()
+        payload["TimeZone"] = self.config.get('time_zone')
 
         return payload
-    
-    def parse_response(self, response: requests.Response) -> Iterable[dict]:
-        """Parse the response and return an iterator of result records.
-
-        Args:
-            response: The HTTP ``requests.Response`` object.
-
-        Yields:
-            Each record from the source.
-        """
-
-        yield from extract_jsonpath(self.records_jsonpath, input=response.json())
     
     def request_records(self, context: dict | None) -> Iterable[dict]:
         """
@@ -171,23 +160,29 @@ class CloudPaymentsStream(RESTStream):
         Yields:
             An item for every record in the response.
         """
-
-        period = get_date_range(self.get_starting_timestamp(context), self.config.get('start_date'))
+        date_range = get_date_range(
+            starting_replication_ts=pendulum.parse(self.config.get('start_date'), tz=self.config.get('time_zone')), 
+            replication_key_ts=self.get_starting_timestamp(context),
+            time_zone=self.config.get('time_zone')
+            )
 
         with metrics.http_request_counter(self.name, self.path) as request_counter:
             request_counter.context = context
             
-            for dt in period:
-
+            for dt in date_range:
+                
                 paginator = self.get_new_paginator()
                 decorated_request = self.request_decorator(self._request)
 
                 while not paginator.finished:
                     prepared_request = self.prepare_request(
                         context,
-                        next_page_token={"pagination_token": paginator.current_value,
-                                            "date_token": dt},
+                        next_page_token={
+                            "pagination_token": paginator.current_value,
+                            "date_token": dt
+                            },
                     )
+
                     resp = decorated_request(prepared_request, context)
                     request_counter.increment()
                     self.update_sync_costs(prepared_request, resp, context)
@@ -198,3 +193,38 @@ class CloudPaymentsStream(RESTStream):
                     self._write_state_message()
 
                     paginator.advance(resp)
+
+    def parse_response(self, response: requests.Response) -> Iterable[dict]:
+        """Parse the response and return an iterator of result records.
+
+        Args:
+            response: The HTTP ``requests.Response`` object.
+
+        Yields:
+            Each record from the source.
+        """
+
+        yield from extract_jsonpath(self.records_jsonpath, input=response.json())
+
+    def validate_response(self, response: requests.Response) -> None:
+        """
+        Validate HTTP response.
+
+        Checks for error status codes and whether they are fatal or retriable.
+        In case an error is deemed transient and can be safely retried, then this method should raise an singer_sdk.exceptions.RetriableAPIError. By default this applies to 5xx error codes, along with values set in: extra_retry_statuses
+        In case an error is unrecoverable raises a singer_sdk.exceptions.FatalAPIError. By default, this applies to 4xx errors, excluding values found in: extra_retry_statuses
+        Tap developers are encouraged to override this method if their APIs use HTTP status codes in non-conventional ways, or if they communicate errors differently (e.g. in the response body).
+
+        PARAMETERS:
+            response – A requests.Response object.
+
+        RAISES:
+            FatalAPIError – If the request is not retriable.
+
+            RetriableAPIError – If the request is retriable.
+        """
+        try:
+            super().validate_response(response)
+        except FatalAPIError as fatal_error:
+            if response.json().get('Success') is False:
+                raise fatal_error

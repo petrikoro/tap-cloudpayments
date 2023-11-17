@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import backoff
 import pendulum
+from http import HTTPStatus
 from typing import Any, Callable, Iterable, Generator
 
 import requests
@@ -11,6 +12,7 @@ from memoization import cached
 from singer_sdk import metrics
 from singer_sdk.streams import RESTStream
 from singer_sdk.exceptions import FatalAPIError
+from singer_sdk.exceptions import RetriableAPIError
 from singer_sdk.authenticators import BasicAuthenticator
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 
@@ -223,8 +225,26 @@ class CloudPaymentsStream(RESTStream):
 
             RetriableAPIError – If the request is retriable.
         """
-        try:
-            super().validate_response(response)
-        except FatalAPIError as fatal_error:
-            if response.json().get('Success') is False:
-                raise fatal_error
+            
+        if (
+            response.status_code in self.extra_retry_statuses
+            or HTTPStatus.INTERNAL_SERVER_ERROR
+            <= response.status_code
+            <= max(HTTPStatus)
+        ):
+            msg = self.response_error_message(response)
+            raise RetriableAPIError(msg, response)
+
+        if (
+            HTTPStatus.BAD_REQUEST
+            <= response.status_code
+            < HTTPStatus.INTERNAL_SERVER_ERROR
+        ):
+            msg = self.response_error_message(response)
+            raise FatalAPIError(msg)
+        
+        if (
+            (response.json()).get('Success', False) is False
+        ):
+            msg = self.response_error_message(response)
+            raise FatalAPIError(msg)

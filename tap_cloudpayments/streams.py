@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-
 from tap_cloudpayments.client import CloudPaymentsStream
 
 SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
@@ -15,7 +14,7 @@ class PaymentsStream(CloudPaymentsStream):
     name = "payments"
     rest_method = "POST"
     path = "/payments/list"
-    records_jsonpath = '$.Model[*]'
+    records_jsonpath = "$.Model[*]"
 
     primary_keys = ["TransactionId"]
     replication_key = "CreatedDateIso"

@@ -5,7 +5,7 @@ from __future__ import annotations
 import backoff
 import pendulum
 from http import HTTPStatus
-from typing import Any, Callable, Iterable, Generator
+from typing import Any, Iterable, Generator
 
 import requests
 from memoization import cached
@@ -16,11 +16,7 @@ from singer_sdk.exceptions import RetriableAPIError
 from singer_sdk.authenticators import BasicAuthenticator
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 
-from tap_cloudpayments.helpers import get_date_range
 from tap_cloudpayments.pagination import EmptyPageNumberPaginator
-
-
-_Auth = Callable[[requests.PreparedRequest], requests.PreparedRequest]
 
 
 class CloudPaymentsStream(RESTStream):
@@ -33,7 +29,7 @@ class CloudPaymentsStream(RESTStream):
         RETURNS:
             The wait generator
         """
-        
+
         return backoff.constant(120)
 
     def backoff_max_tries(self) -> int:
@@ -43,9 +39,9 @@ class CloudPaymentsStream(RESTStream):
         RETURNS:
             Number of max retries.
         """
-        
+
         return 30
-    
+
     def get_new_paginator(self):
         """
         Get a fresh paginator for this API endpoint.
@@ -53,10 +49,11 @@ class CloudPaymentsStream(RESTStream):
         RETURNS:
             A paginator instance.
         """
-        
-        return EmptyPageNumberPaginator(start_value=1, 
-                                        records_jsonpath=self.records_jsonpath)
-    
+
+        return EmptyPageNumberPaginator(
+            start_value=1, records_jsonpath=self.records_jsonpath
+        )
+
     @property
     def timeout(self) -> int:
         """
@@ -105,7 +102,7 @@ class CloudPaymentsStream(RESTStream):
 
         headers: dict = {}
 
-        headers["Content-type"] = 'application/json'
+        headers["Content-type"] = "application/json"
 
         return headers
 
@@ -124,7 +121,6 @@ class CloudPaymentsStream(RESTStream):
 
         return self._requests_session
 
-
     def prepare_request_payload(
         self,
         context: dict | None,
@@ -142,14 +138,16 @@ class CloudPaymentsStream(RESTStream):
         """
 
         payload: dict = {}
-        
-        payload["PageNumber"] = next_page_token['pagination_token']
-        payload["CreatedDateGte"] = pendulum.parse(next_page_token['date_token'], tz=self.config.get('time_zone')).to_w3c_string()
-        payload["CreatedDateLte"] = (pendulum.parse(next_page_token['date_token'], tz=self.config.get('time_zone')) + pendulum.duration(hours=24)).to_w3c_string()
-        payload["TimeZone"] = self.config.get('time_zone')
+
+        payload["PageNumber"] = next_page_token["pagination_token"]
+        payload["CreatedDateGte"] = next_page_token["date_token"].to_w3c_string()
+        payload["CreatedDateLte"] = (
+            next_page_token["date_token"] + pendulum.duration(hours=24)
+        ).to_w3c_string()
+        payload["TimeZone"] = self.config.get("time_zone")
 
         return payload
-    
+
     def request_records(self, context: dict | None) -> Iterable[dict]:
         """
         Request records from REST endpoint(s), returning response records.
@@ -162,17 +160,15 @@ class CloudPaymentsStream(RESTStream):
         Yields:
             An item for every record in the response.
         """
-        date_range = get_date_range(
-            starting_replication_ts=pendulum.parse(self.config.get('start_date'), tz=self.config.get('time_zone')), 
-            replication_key_ts=self.get_starting_timestamp(context),
-            time_zone=self.config.get('time_zone')
-            )
+        date_range = pendulum.period(
+            self.get_starting_timestamp(context),
+            pendulum.now(self.config.get("time_zone")),
+        )
 
         with metrics.http_request_counter(self.name, self.path) as request_counter:
             request_counter.context = context
-            
+
             for dt in date_range:
-                
                 paginator = self.get_new_paginator()
                 decorated_request = self.request_decorator(self._request)
 
@@ -181,8 +177,8 @@ class CloudPaymentsStream(RESTStream):
                         context,
                         next_page_token={
                             "pagination_token": paginator.current_value,
-                            "date_token": dt
-                            },
+                            "date_token": dt,
+                        },
                     )
 
                     resp = decorated_request(prepared_request, context)
@@ -225,7 +221,7 @@ class CloudPaymentsStream(RESTStream):
 
             RetriableAPIError – If the request is retriable.
         """
-            
+
         if (
             response.status_code in self.extra_retry_statuses
             or HTTPStatus.INTERNAL_SERVER_ERROR
@@ -242,9 +238,7 @@ class CloudPaymentsStream(RESTStream):
         ):
             msg = self.response_error_message(response)
             raise FatalAPIError(msg)
-        
-        if (
-            (response.json()).get('Success', False) is False
-        ):
+
+        if (response.json()).get("Success", False) is False:
             msg = self.response_error_message(response)
             raise FatalAPIError(msg)

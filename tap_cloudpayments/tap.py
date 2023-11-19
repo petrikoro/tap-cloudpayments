@@ -42,7 +42,6 @@ class TapCloudPayments(Tap):
         ),
     ).to_dict()
 
-
     def discover_streams(self) -> list[streams.CloudPaymentsStream]:
         """Return a list of discovered streams.
 

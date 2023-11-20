@@ -35,7 +35,7 @@ class TapCloudPayments(Tap):
             description="The earliest record date to sync",
         ),
         th.Property(
-            "time_zone",
+            "timezone",
             th.StringType,
             default="UTC",
             description="Time zone code for CreatedDateIso",

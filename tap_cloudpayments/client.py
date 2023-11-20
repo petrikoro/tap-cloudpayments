@@ -16,7 +16,7 @@ from singer_sdk.exceptions import RetriableAPIError
 from singer_sdk.authenticators import BasicAuthenticator
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 
-from tap_cloudpayments.pagination import EmptyPageNumberPaginator
+from tap_cloudpayments.pagination import DateOffsetPaginator
 
 
 class CloudPaymentsStream(RESTStream):
@@ -50,8 +50,10 @@ class CloudPaymentsStream(RESTStream):
             A paginator instance.
         """
 
-        return EmptyPageNumberPaginator(
-            start_value=1, records_jsonpath=self.records_jsonpath
+        return DateOffsetPaginator(
+            start_value=self._starting_timestamp,
+            offset_days=1,
+            timezone=self._timezone,
         )
 
     @property
@@ -71,7 +73,7 @@ class CloudPaymentsStream(RESTStream):
     def url_base(self) -> str:
         """Return the base url, e.g. https://api.mysite.com/v3/."""
 
-        return "https://api.cloudpayments.ru/v2"
+        return "https://api.cloudpayments.ru"
 
     @property
     @cached
@@ -139,12 +141,8 @@ class CloudPaymentsStream(RESTStream):
 
         payload: dict = {}
 
-        payload["PageNumber"] = next_page_token["pagination_token"]
-        payload["CreatedDateGte"] = next_page_token["date_token"].to_w3c_string()
-        payload["CreatedDateLte"] = (
-            next_page_token["date_token"] + pendulum.duration(hours=24)
-        ).to_w3c_string()
-        payload["TimeZone"] = self.config.get("time_zone")
+        payload["Date"] = pendulum.instance(next_page_token).to_date_string()
+        payload["TimeZone"] = self.config.get("timezone")
 
         return payload
 
@@ -160,37 +158,35 @@ class CloudPaymentsStream(RESTStream):
         Yields:
             An item for every record in the response.
         """
-        date_range = pendulum.period(
-            self.get_starting_timestamp(context),
-            pendulum.now(self.config.get("time_zone")),
-        )
+        # Set custom properties to the stream.
+        self._starting_timestamp = self.get_starting_timestamp(context)
+        self._timezone = self.config.get("timezone")
+
+        self.logger.info(msg=f"_starting_timestamp: {self.get_starting_timestamp(context)}")
+        self.logger.info(msg=f"get_context_state: {self.get_context_state(context)}")
+        self.logger.info(msg=f"get_replication_key_signpost: {self.get_replication_key_signpost(context)}")
+        self.logger.info(msg=f"get_starting_replication_key_value: {self.get_starting_replication_key_value(context)}")
 
         with metrics.http_request_counter(self.name, self.path) as request_counter:
             request_counter.context = context
+            paginator = self.get_new_paginator()
 
-            for dt in date_range:
-                paginator = self.get_new_paginator()
+            while not paginator.finished:
                 decorated_request = self.request_decorator(self._request)
+                prepared_request = self.prepare_request(
+                    context, next_page_token=paginator.current_value
+                )
 
-                while not paginator.finished:
-                    prepared_request = self.prepare_request(
-                        context,
-                        next_page_token={
-                            "pagination_token": paginator.current_value,
-                            "date_token": dt,
-                        },
-                    )
+                resp = decorated_request(prepared_request, context)
+                request_counter.increment()
+                self.update_sync_costs(prepared_request, resp, context)
 
-                    resp = decorated_request(prepared_request, context)
-                    request_counter.increment()
-                    self.update_sync_costs(prepared_request, resp, context)
+                yield from self.parse_response(resp)
 
-                    yield from self.parse_response(resp)
+                self.finalize_state_progress_markers()
+                self._write_state_message()
 
-                    self.finalize_state_progress_markers
-                    self._write_state_message()
-
-                    paginator.advance(resp)
+                paginator.advance(resp)
 
     def parse_response(self, response: requests.Response) -> Iterable[dict]:
         """Parse the response and return an iterator of result records.
@@ -229,7 +225,7 @@ class CloudPaymentsStream(RESTStream):
             <= max(HTTPStatus)
         ):
             msg = self.response_error_message(response)
-            raise RetriableAPIError(msg, response)
+            raise FatalAPIError(msg, response)
 
         if (
             HTTPStatus.BAD_REQUEST

@@ -21,7 +21,7 @@ plugins:
     - name: api_secret
       kind: password
     - name: start_date
-    - name: time_zone
+    - name: timezone
     config:
       start_date: '2023-11-01T00:00:00+00:00'
     select:

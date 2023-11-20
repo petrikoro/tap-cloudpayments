@@ -18,6 +18,6 @@ class PaymentsStream(CloudPaymentsStream):
 
     primary_keys = ["TransactionId"]
     replication_key = "CreatedDateIso"
-    is_sorted = True
+    is_sorted = False
 
     schema_filepath = SCHEMAS_DIR / "payments.json"

@@ -1,49 +1,52 @@
 """CloudPayments pagination handling."""
 
 import requests
+import pendulum
+import typing as t
+
 from singer_sdk.helpers.jsonpath import extract_jsonpath
-from singer_sdk.pagination import BasePageNumberPaginator
+from singer_sdk.pagination import BaseAPIPaginator
 
 
-class EmptyPageNumberPaginator(BasePageNumberPaginator):
-
-    def __init__(self, 
-                 start_value: int,
-                 records_jsonpath: str | None, 
-                 *args, 
-                 **kwargs):
-        super().__init__(1)
-        self._start_value = start_value
-        self._records_jsonpath = records_jsonpath
-
-    def has_more(self, response: requests.Response):
-        """
-        Return True if there are more pages to fetch.
+class DateOffsetPaginator(BaseAPIPaginator):
+    def __init__(
+        self,
+        start_value: pendulum.DateTime,
+        offset_days: int,
+        timezone: str,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> None:
+        """Create a new paginator.
 
         Args:
-            response: The most recent response object.
-            jsonpath: An optional jsonpath to where the tokens are located in
-                      the response, defaults to `hasMore` in the response.
-
-        Returns:
-            Whether there are more pages to fetch.
-
+            start_value: Initial value.
+            offset_days: Constant days number.
+            args: Paginator positional arguments.
+            kwargs: Paginator keyword arguments.
         """
+        super().__init__(start_value, *args, **kwargs)
+        self._offset_days = offset_days
+        self._timezone = timezone
 
-        if self._records_jsonpath:
-            return bool(len(list(extract_jsonpath(self._records_jsonpath, input=response.json()))))
-        else:
-            return bool(len(response.json()))
-        
-    def get_next(self, response: requests.Response) -> int | None:  # noqa: ARG002
-        """
-        Get the next page number.
+    def has_more(self, response: requests.Response) -> bool:
+        """Override this method to check if the endpoint has any pages left.
 
         Args:
             response: API response object.
 
         Returns:
-            The next page number.
+            Boolean flag used to indicate if the endpoint has more pages.
         """
+        return self.current_value < pendulum.today(tz=self._timezone)
 
-        return self._start_value + 1
+    def get_next(self, response: requests.Response) -> int | None:  # noqa: ARG002
+        """Get the next page offset.
+
+        Args:
+            response: API response object.
+
+        Returns:
+            The next page offset.
+        """
+        return self._value + pendulum.duration(days=self._offset_days)

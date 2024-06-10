@@ -207,7 +207,6 @@
           "string",
           "null"
         ],
-        "format": "ipv4",
         "description": "IP-адрес плательщика"
       },
       "IpCountry": {
